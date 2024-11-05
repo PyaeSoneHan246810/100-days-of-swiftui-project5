@@ -4,6 +4,7 @@ struct MainContentView: View {
     @State private var usedWords = [String]()
     @State private var rootWord = ""
     @State private var newWord = ""
+    @State private var score = 0
     @State private var errorTitle = ""
     @State private var errorMessage = ""
     @State private var isErrorAlertPresented = false
@@ -29,17 +30,32 @@ struct MainContentView: View {
                         Text(word)
                     }.listRowSeparator(.hidden)
                 }.listStyle(.plain)
+                Text("Your Score: \(score)")
+                    .font(.title2.bold())
+                    .padding(.horizontal, 20)
+                Spacer()
             }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                 .navigationTitle(rootWord)
                 .navigationBarTitleDisplayMode(.large)
+                .toolbar {
+                    Button("Restart") {
+                        startGame()
+                    }
+                }
                 .alert(errorTitle, isPresented: $isErrorAlertPresented) {
 
                 } message: {
                      Text(errorMessage)
                 }
         }.onAppear {
-            getRootWord()
+            startGame()
         }
+    }
+    
+    private func startGame() {
+        getRootWord()
+        usedWords.removeAll()
+        score = 0
     }
     
     private func getRootWord() {
@@ -62,6 +78,21 @@ struct MainContentView: View {
             )
             return
         }
+        guard answer.count >= 3 else {
+            presentWordErrorAlert(
+                title: "Invalid Word",
+                message: "Please enter a word not shorter than three letters."
+            )
+            return
+        }
+        guard answer != rootWord else {
+            presentWordErrorAlert(
+                title: "Invalid Word",
+                message: "You can't just enter the given word."
+            )
+            return
+        }
+
         guard isNotUsed(word: answer) else {
             presentWordErrorAlert(
                 title: "Used Word",
@@ -83,11 +114,10 @@ struct MainContentView: View {
             )
             return
         }
-
-        //extra validation
         withAnimation {
             usedWords.insert(answer, at: 0)
         }
+        score += answer.count
         newWord = ""
     }
     
